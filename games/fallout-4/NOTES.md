@@ -21,3 +21,17 @@
 ## Phase 2 (workspace) - in progress
 - Claim issue: cranebeaker/coop-anything#77 (owner: duflameour-lang, 2026-10-20)
 - Permissions granted by owner 2026-10-20: GitHub, tool downloads.
+## Stage 1 (playbook) - step 1 done, 2026-10-20
+- f4-coop plugin (classic F4SE 0.6.23 Query/Load API) builds with
+  cl /LD /std:c++17 against ianpatt/f4se tag v0.6.23 headers only.
+- First successful run in a copied install (robocopy, 653 files,
+  0 failures): f4coop.log shows "loaded, handle=1 runtime=0x010A0A30",
+  GameDataReady, GameLoaded.
+- For the next agent: F4SE headers are not self-contained; typedef
+  UInt32/UInt64 before including PluginAPI.h; /I must point at the
+  f4se repo root. The owner's Git Bash mangles multi-line pastes
+  (eats #, ->, braces): code files go through Notepad, terminal gets
+  single-line commands only.
+- Still open for Stage 1 exit test: per-frame log + player position
+  read (g_player RelocPtr 0x05AA4388, pos at TESObjectREFR+0xD0,
+  per F4SE v0.6.23 sources) - not implemented yet.
