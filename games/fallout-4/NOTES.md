@@ -42,3 +42,16 @@
   exists before being placed); real coords from next tick.
 - Honest caveats: 10 Hz background poll, not a per-frame hook; world id
   not read yet (needed later to hide puppets in other cells).
+## Stage 2 (playbook) - step 1 done, 2026-10-21
+- UDP transport verified: plugin sends PosPacket{magic "F4CP", seq, x,y,z}
+  to 127.0.0.1:31337 at 10 Hz; standalone recv.exe tool decodes it live.
+- Caveat: first ticks after world load still emit the 2048/2048/0 placeholder
+  (player placed into world slightly later); filter client-side for now,
+  proper fix later (send only after first real position read).
+- Caveat: send-only, no receive path in-game yet; no world id in packet yet.
+## Stage 2 step 1 verified - 2026-10-21
+- Live coordinates over UDP confirmed: seq 660-687 stationary (packets
+  flow, coords frozen - expected), seq 688+ movement, X/Y changing,
+  Z stable on flat ground. No sequence gaps. ~10 pps.
+- Tooling: recv.exe (tools/recv.cpp) is our first test bot - the test
+  runs without a second human (playbook rule: test with bots).
