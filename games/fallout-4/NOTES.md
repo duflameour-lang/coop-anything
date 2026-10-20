@@ -35,3 +35,10 @@
 - Still open for Stage 1 exit test: per-frame log + player position
   read (g_player RelocPtr 0x05AA4388, pos at TESObjectREFR+0xD0,
   per F4SE v0.6.23 sources) - not implemented yet.
+## Stage 1 (playbook) - COMPLETE, 2026-10-20
+- Position thread verified in game: hundreds of samples while walking,
+  world-scale coords (~-80186, 91135, 7852), stable Z on flat ground.
+- Artifact: first tick after world load reads 2048/2048/0 (player object
+  exists before being placed); real coords from next tick.
+- Honest caveats: 10 Hz background poll, not a per-frame hook; world id
+  not read yet (needed later to hide puppets in other cells).
