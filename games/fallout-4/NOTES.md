@@ -239,3 +239,28 @@
   LAN = the actual "two players see each other" milestone, or (b) puppet
   polish (interpolation + walk anims). Recommended: (a) first - polish
   after the real thing works.
+## Stage 6 - host-authoritative relay - 2026-10-21 (built, awaiting test)
+- Owner picked (a). v12: f4coop.ini in the game root selects the role -
+  role=host (bind `port`, receive clients, rebroadcast the host player +
+  every known remote position to every peer, drop peers silent >5 s,
+  service the socket even in menus so peers can join early) or
+  role=client (send own pos to host:port, puppet everyone but self).
+  Default without ini: client to 127.0.0.1:31337 - the old echo-bot
+  tests still work unchanged. Puppet rule is now "puppet every id except
+  myId" instead of "except 0".
+- tools/client.exe: FAKE second player for one-machine relay validation.
+  Sends its own circle (id=2) and anchors on the first position the host
+  broadcasts; before anchoring it sends garbage that the host's distance
+  guard safely ignores.
+- fo4-test now has f4coop.ini (role=host, id=1, port=31337).
+- Test ladder: (1) one machine: game(host) + client.exe -> puppet id=2
+  circles, client.exe prints host broadcasts, kill client -> "peer left"
+  in log, puppet freezes; (2) LAN: second machine with FO4 1.10.163 +
+  F4SE 0.6.23 + f4-coop.dll + ini(role=client, id=2, host=<A ip>),
+  firewall UDP 31337 open on host, both load saves in the same location
+  -> each machine sees the other's puppet = THE "two players see each
+  other" milestone.
+- Known limitation to state honestly: puppets still copy the LOCAL
+  player's base form, so each machine's puppet of the other player looks
+  like a copy of the observing machine's own character. Appearance sync
+  (remote base form/equipment) is Stage 7 material.
