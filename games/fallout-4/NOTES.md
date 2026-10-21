@@ -121,3 +121,27 @@
 - Retest plan: fresh recv.exe, load save, expect normal load, then
   circling in-game; if the load still hangs, the fallback is a time-delay
   grace after PostLoadGame before the first apply.
+## Stage 3B second test result - 2026-10-21 (owner playtest, v7)
+- v7 crashed the game on every save load. Root cause found in F4SE source,
+  Hooks_SaveLoad.cpp:51: kMessage_PostLoadGame is dispatched with
+  data = (void*)result - the bool is VALUE-ENCODED AS THE POINTER (0x1/0x0),
+  not a pointer to a bool. v7's handler did *(bool*)msg->data -> read at
+  address 0x1 -> access violation on the game thread at the exact moment
+  the load finishes. Log forensics: PreLoadGame logged, PostLoadGame line
+  absent (deref was before the logline), rx echo kept flowing until the
+  process died. LESSON for all F4SE plugin work: several F4SE messages
+  (PostLoadGame, GameDataReady per Hooks_GameData.cpp:29) value-encode
+  their payload as the data pointer; check the Hooks_*.cpp dispatch site
+  before dereferencing msg->data.
+- Also learned from the v6 section of the same log: the v6 moves ran during
+  the load screen and the ENGINE CONSUMED THEM - post-move readback showed
+  pos advancing to the previous target one step late (engine applies the
+  move asynchronously, next frame), cell/ws pointers sane (exterior).
+  MoveRefrToPosition itself is not the crasher and not the load-hang bug:
+  the hang comes from applying it during the load, the crash came from
+  the message handler. No moves have yet run in a fully-loaded game -
+  that is what v8's retest verifies.
+- v8: PostLoadGame handler reads ok = (msg->data != nullptr); comment
+  added on GameDataReady too (same encoding, handler already safe).
+- Bonus diagnostics now in the log: timestamps (v7) made this whole
+  forensics possible in one reading; keep them.
