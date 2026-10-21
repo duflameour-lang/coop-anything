@@ -166,3 +166,29 @@
 - Stage 3B exit criteria for the next test: load completes normally,
   "grace elapsed" ~10 s after PostLoadGame, then moveRefr lines at a
   steady ~10/s cadence (task pump healthy) and visible circling in-game.
+## Stage 3B fourth test + Stage 4 pivot - 2026-10-21 (owner playtest, v9)
+- GRACE WORKS: load completed, owner saw the world (pos settles confirm),
+  "grace elapsed, applying moves" at the right time.
+- NEW FINDING: the FIRST player MoveRefrToPosition in a live game
+  triggered a loading screen (move #1 was 535 units, same cell, same ws -
+  console moveto never loads for that) and the same hang loop followed
+  (move cadence collapsed to one per 5-20 s = task queue pumped rarely,
+  the game stuck in the load path again). Conclusion: player moves take a
+  special engine path (prime suspect: pTargetHandle semantics or the
+  player-only position pipeline).
+- DECISION: stop moving the player entirely. The co-op architecture never
+  needs it - the local player is driven by local input; ONLY puppets move
+  by network. Stage 3B's actual goal (engine-level network-driven
+  movement proven: positions apply, physics settles) is ACHIEVED.
+- v10 = Stage 4: one-time puppet spawn via PlaceAtMe_Native (vm from
+  g_gameVM base+0x058D3308, +0xB0 m_virtualMachine; stackId 0; target =
+  player; form = player->baseForm +0xE0 = a copy of the player's own NPC,
+  no FormID guesswork), then the same task pipeline drives the PUPPET in
+  the circle. PreLoadGame/NewGame clear the puppet (stale after world
+  change). Distance guard now measures from the puppet.
+- This test splits the hypothesis space cleanly: if the puppet circles
+  without loading screens, the player-path issue is noted and skipped
+  (revisit with disassembly when player teleport sync ever matters); if
+  the puppet ALSO triggers load screens, our MoveRefrToPosition call
+  semantics (nullHandle?) are wrong and the next step is disassembling
+  MoveRefrToPosition and its Papyrus native call site in Fallout4.exe.
