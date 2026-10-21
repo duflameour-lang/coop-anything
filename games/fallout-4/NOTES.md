@@ -93,3 +93,31 @@
 - Test plan: fresh recv.exe, launch test copy via F4SE, load an outdoor
   save; expect visible dragging in a ~4.3 m circle + "moveRefr #N" lines
   with cell/ws pointers and post-move readback in f4coop.log.
+## Stage 3B first test result - 2026-10-21 (owner playtest, v6)
+- CORE RESULT: MoveRefrToPosition on the player WORKS. The engine accepted
+  network-driven moves - the circle executed (moveRefr lines in the log).
+  Authoritative network movement of the local player is proven; this is the
+  core mechanic of co-op movement. (Whether the world was ever visible is
+  unconfirmed - see the bug below.)
+- BUG: applying moves during save load hangs the loading screen forever
+  (infinite load; owner observed the save loading endlessly while the log
+  showed the circle running). v6 armed applying off kMessage_GameLoaded,
+  which fires before the player is placed (same root as the 2048/2048/0
+  artifact); the engine places the player, we teleport it 10x/s, and the
+  loading screen never dismisses.
+- v7 fix, three gates:
+  1. Lifecycle: apply armed only by kMessage_PostLoadGame(success);
+     disarmed on PreLoadGame/NewGame (F4SEMessagingInterface).
+  2. UI: task re-checks UI::numPauseGame ("isInMenuMode", UI singleton
+     base+0x058D0898, field +0x1E0, per GameMenus.h tag v0.6.23) - covers
+     loading screens, pause menu, Pip-Boy. Blocks log transitions.
+  3. Distance: skip any move >5000 units from current pos (stale-anchor /
+     corrupt-packet protection).
+  Log lines now have timestamps (HH:MM:SS.mmm) for load-window forensics.
+- Unknowns for next test: does PostLoadGame fire before or after the fade
+  finishes (log timestamps will show), is numPauseGame reliably 0 in
+  gameplay (VATS/Pip-Boy should block - watch "blocked:" lines), and does
+  the load now complete normally.
+- Retest plan: fresh recv.exe, load save, expect normal load, then
+  circling in-game; if the load still hangs, the fallback is a time-delay
+  grace after PostLoadGame before the first apply.
