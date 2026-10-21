@@ -217,3 +217,25 @@
   for "everyone sees everyone".
 - Next after this: host-authoritative relay (real second client over
   LAN), then animation/equipment sync for puppet believability.
+## Stage 5 TEST SUCCESS - 2026-10-21 (owner playtest, v11)
+- Two puppets spawned and circled with different anchors/directions as
+  designed - the N-players primitive ("everyone sees everyone") works.
+  Save load still clean, no hangs.
+- Side finding: owner loaded a save made during an earlier puppet session
+  and it contained a STANDING clone. Mechanism: PlaceAtMe'd refs get baked
+  into saves made while they exist; our map-clear on load leaves the
+  baked-in clone untracked, so it never moves. Hygiene TODO: despawn
+  tracked puppets on PreLoadGame (needs Disable/Delete path), and treat
+  saves made during puppet tests as disposable (test copy anyway).
+- Owner question + confirmation: the "teleporting" hops are BY DESIGN at
+  this stage - position teleporting at packet rate, no locomotion layer.
+  Hop = radius * angular step per packet (101: 300u * 0.15 = 45u = 0.64 m;
+  102: 250u * 0.10 = 25u = 0.36 m). Believability options, ranked:
+  (1) client-side interpolation between packets - cheap, smooth glide;
+  (2) animation sync via anim events / velocity-driven locomotion - needs
+  RE of FO4 anim events or actor velocity fields;
+  (3) AI walk-to packages - best looking, most plumbing.
+- NEXT FORK (owner to choose): (a) host relay + real second client over
+  LAN = the actual "two players see each other" milestone, or (b) puppet
+  polish (interpolation + walk anims). Recommended: (a) first - polish
+  after the real thing works.
