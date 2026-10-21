@@ -284,3 +284,22 @@
   "puppet 2 dead (lifeState=N)", 5 s later a fresh puppet spawns at the
   player and resumes circling. If lifeState was wrong, the logged values
   at spawn/death tell us what to use instead.
+## Stage 6 v13 test - death-guess WRONG, reverted in v14 - 2026-10-21
+- Symptom (owner): clones spawn where the player stands and never circle.
+- Log forensics: 19 spawns / 18 "dead" - every LIVING puppet read
+  lifeState >= 3 and was instantly abandoned, then respawned on the 5 s
+  rate limit. The rate limiter did its job (no runaway army), but the
+  field guess was wrong: Actor+0x130 holds 0x80000000 for living actors
+  (occasionally 0x80000041) - flags, not a life state. v13's threshold
+  >= 3 matched both, i.e. everything read as dead.
+- Bonus datum: "blocked: menu/pause mode (pauseCount=1)" appeared once at
+  the tail of the load - the numPauseGame offset IS valid; only the
+  loading screen itself does not increment it (matches v8's finding).
+- v14: death gate and respawn removed (v12 behavior: do not shoot
+  puppets in tests - the corpse will circle). The spawn line still logs
+  the +0x130 value to accumulate RE data. REAL death detection is
+  queued for the RE phase: disassemble Actor::IsDead / GetLifeState
+  (or use ActorValueOwner::GetValue on Health AV once AVInfo lookup is
+  mapped). Not blocking the LAN milestone.
+- Cleanup note for the owner: the standing-clone army existed only in
+  that session; reload an earlier save and it is gone (unless saved).
