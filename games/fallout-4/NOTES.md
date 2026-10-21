@@ -145,3 +145,24 @@
   added on GameDataReady too (same encoding, handler already safe).
 - Bonus diagnostics now in the log: timestamps (v7) made this whole
   forensics possible in one reading; keep them.
+## Stage 3B third test result - 2026-10-21 (owner playtest, v8)
+- Crash FIX CONFIRMED: "PostLoadGame ok=1 - apply armed" logged, no crash.
+- Infinite load is BACK and now fully understood:
+  - Zero "blocked: menu/pause mode" lines -> UI::numPauseGame (if the
+    offset is even right; the UI class layout in GameMenus.h has no
+    STATIC_ASSERTs) does not flag the loading screen. The pause gate
+    never fired during the whole load.
+  - moveRefr #1 ran 7 s after arming, WHILE the load screen was still up;
+    subsequent moves ticked only once per ~12 s - F4SE's task queue is
+    pumped from the normal frame loop, so the game never reached normal
+    frames. Each move restarts cell streaming around the player, so the
+    loading screen can never dismiss. Hang mechanism confirmed.
+- v9 fix: 10 s grace after PostLoadGame before any move applies
+  (kArmGraceMs; logged as "grace elapsed, applying moves"). During the
+  grace the load finishes undisturbed, then the circle starts in a fully
+  live game. numPauseGame gate stays as a second, observable layer - if
+  opening the Pip-Boy next test produces no "blocked:" line, the offset
+  is wrong and the gate gets fixed or dropped.
+- Stage 3B exit criteria for the next test: load completes normally,
+  "grace elapsed" ~10 s after PostLoadGame, then moveRefr lines at a
+  steady ~10/s cadence (task pump healthy) and visible circling in-game.
