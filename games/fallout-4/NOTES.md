@@ -65,3 +65,31 @@
   addr 0x013FE7E0, signature verified) instead of raw memcpy; also move
   writes onto the game thread (currently background thread - unsafe for
   real mutation, acceptable for this throwaway test).
+## Stage 3B implemented - 2026-10-21 (awaiting in-game test)
+- v6 architecture: net thread only records the latest ghost position
+  (mutex-guarded, version counter); the actual move runs as an
+  ITaskDelegate posted through F4SE's task interface (AddTask). F4SE pumps
+  those tasks from a hook inside the engine's message-queue processing
+  (Hooks_Threads.cpp -> MessageQueueProcessTask), i.e. on the game thread.
+- Move call mirrors the only in-tree caller, f4se/PapyrusObjectReference.cpp
+  ConnectObjects: MoveRefrToPosition(refr, &nullHandle, refr->parentCell,
+  GetWorldspace(refr), pos, rot). Offsets from tag v0.6.23 sources:
+  MoveRefrToPosition 0x013FE7E0, TESObjectREFR::GetWorldspace 0x0040F290,
+  parentCell +0xB8, g_invalidRefHandle 0x038CCE04 (value read at runtime).
+  Rotation = euler Z (radians) derived from move direction.
+- Backpressure: at most one apply task in flight, posted only when the
+  ghost version changed - if the bot stops, the player is released within
+  ~100 ms instead of being pinned to the last ghost position.
+- recv.exe fix: the anchor was sometimes landing on the 2048/2048/0
+  pre-load placeholder; the bot now skips it (anchor = first real pos).
+- Correction vs earlier session notes: PlaceAtMe_Native in tag v0.6.23 is
+  0x0140B0E0 (GameObjects.cpp), not 0x01159E80. Verified by reading the
+  tag source; matters for the Stage 4 puppet spawn.
+- Reproducible build: build.bat (vswhere -> vcvars64 -> cl /LD /std:c++17,
+  ws2_32); .gitignore fixed to actually exclude *.dll/*.exe/*.obj.
+- Unknown until tested: does MoveRefrToPosition on the *player* at 10 Hz
+  behave (camera, physics, cell transitions)? Interior case relies on
+  GetWorldspace()==NULL being accepted (same as Papyrus MoveTo).
+- Test plan: fresh recv.exe, launch test copy via F4SE, load an outdoor
+  save; expect visible dragging in a ~4.3 m circle + "moveRefr #N" lines
+  with cell/ws pointers and post-move readback in f4coop.log.
