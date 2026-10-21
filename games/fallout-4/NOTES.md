@@ -55,3 +55,13 @@
   Z stable on flat ground. No sequence gaps. ~10 pps.
 - Tooling: recv.exe (tools/recv.cpp) is our first test bot - the test
   runs without a second human (playbook rule: test with bots).
+## Stage 3A result - 2026-10-21
+- Full chain proven: rx packets arrive (circle path in log), memcpy writes
+  to TESObjectREFR::pos - own pos reads confirm the write.
+- BUT: renderer/physics ignore the logical pos field; player appears
+  stationary despite coords changing. Two-position reality: logical pos
+  vs physics/animation position.
+- Next (3B): use the engine's MoveRefrToPosition (v0.6.23 GameReferences.h,
+  addr 0x013FE7E0, signature verified) instead of raw memcpy; also move
+  writes onto the game thread (currently background thread - unsafe for
+  real mutation, acceptable for this throwaway test).
