@@ -264,3 +264,23 @@
   player's base form, so each machine's puppet of the other player looks
   like a copy of the observing machine's own character. Appearance sync
   (remote base form/equipment) is Stage 7 material.
+## Stage 6 test 1 SUCCESS + death handling - 2026-10-21 (owner playtest, v12/v13)
+- Host relay validated end-to-end on one machine: with the game in host
+  mode, starting client.exe made puppet id=2 appear and circle; killing
+  client.exe had been expected to freeze it (relay confirmed).
+- Owner then KILLED the puppet in game: the actor stopped acting, but the
+  corpse kept following the network positions - v12 had no death handling;
+  MoveRefrToPosition happily moves dead refs (ragdoll follows the ref).
+  Textbook host-authority lesson: local players must not be able to kill
+  remote players' bodies without host validation.
+- v13: before every move, read the actor life state (ActorState at
+  Actor+0x128, unk08 -> +0x130; Creation-lineage hypothesis 0=alive,
+  >=3 dying/dead - UNVERIFIED for FO4, so spawn and death lines log the
+  observed value). Dead puppet: abandoned (corpse left in peace) and a
+  fresh one spawns after a 5 s rate limit (prevents clone armies if the
+  check misfires; wrong-guess symptom would be "puppets never move" or
+  respawns every 5 s - log tells which).
+- Next test expectations: kill the puppet -> corpse stays put, log shows
+  "puppet 2 dead (lifeState=N)", 5 s later a fresh puppet spawns at the
+  player and resumes circling. If lifeState was wrong, the logged values
+  at spawn/death tell us what to use instead.
