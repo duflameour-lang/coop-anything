@@ -192,3 +192,28 @@
   the puppet ALSO triggers load screens, our MoveRefrToPosition call
   semantics (nullHandle?) are wrong and the next step is disassembling
   MoveRefrToPosition and its Papyrus native call site in Fallout4.exe.
+## Stage 4 TEST SUCCESS - 2026-10-21 (owner playtest, v10)
+- Owner report + log: save load is CLEAN (no hang), the puppet (a copy of
+  the player's own NPC form) spawned and circled, no crashes. 761 packets
+  exchanged - over a minute of continuous network-driven movement.
+- Log evidence: "spawning puppet ... vm=" then "puppet spawned", moves at
+  a steady ~5/s cadence (healthy task pump = healthy frame loop), cell/ws
+  stable across all moves. Puppet pos readback is SYNCHRONOUS (target ==
+  post-move pos immediately), unlike the player (which lagged one frame).
+  NPC MoveRefrToPosition is the clean path; the player-specific loading-
+  screen pathology is confirmed player-only. Recorded, not blocking: the
+  mod never needs to network-move the local player.
+- The circle passes 4-11 m from the player BY DESIGN (bot anchors the
+  orbit at first-real-pos + 500 X; owner noticed the offset).
+- Known puppet quality gaps (accepted for now): no walk animation
+  (slides), base-form copy means no equipment/appearance sync yet.
+## Stage 5 - multi-puppet protocol v2 - 2026-10-21 (in progress)
+- PosPacket grows a playerId field. Plugin broadcasts its own pos with
+  id 0 and ignores received id 0 (future host rebroadcast hygiene);
+  remote players get one puppet per playerId (std::map, game-thread
+  only). recv.exe now simulates TWO virtual players (101: +500 X anchor,
+  r=300, ccw; 102: +500 Y anchor, r=250, cw) - next test shows two
+  clones circling at different anchors. This is the N-players primitive
+  for "everyone sees everyone".
+- Next after this: host-authoritative relay (real second client over
+  LAN), then animation/equipment sync for puppet believability.
