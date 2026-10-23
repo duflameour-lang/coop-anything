@@ -506,3 +506,41 @@ Checked against F4MP DESIGN.md + sources; verdicts:
    QoL, no cheat surface (co-op mod, no anti-cheat). Feasible, cheap,
    high value for survival players. Also: our wipe-reload rule (req 3)
    is NOT a substitute - stuck != dead; the hotkey is.
+## P2 MILESTONE - plugin speaks the F4MP protocol (v15) - 2026-10-23
+- Plugin v15: net=f4mp mode (default; net=legacy keeps our raw-UDP path
+  as fallback). The background thread is now an ENet client of the
+  F4Multiplayer protocol using the vendored common/ (Protocol.h + Net.cpp):
+  connect -> Hello (name from ini; contentHash 0 like the bot; empty
+  plugins list) -> on kWelcome: playerId/sessionId logged; sends its own
+  PlayerState at 10 Hz (pos +0xD0, heading rot.z +0xC8, cell/worldspace
+  formIDs via parentCell +0xB8 -> +0x14 and GetWorldspace -> +0x14,
+  speed from position deltas, moveMode 0x41/0x81 walk/run flags from
+  speed, sentMs per Protocol::SentMs); kPlayerStates relays feed the SAME
+  g_ghosts map (now with heading) -> the proven puppet task pipeline
+  (spawn via PlaceAtMe, MoveRefrToPosition, lifecycle gates, pause gate,
+  distance guard) drives one puppet per remote playerId, facing their
+  broadcast heading. Reconnect on disconnect every 3 s. Hello timeout
+  (server HELLO_TIMEOUT 5 s) met by sending on CONNECT.
+- Server requirements verified from Server.cpp: heartbeat NOT mandatory
+  (only answered), ENet peer timeouts 10-20 s - our 10 Hz state stream
+  keeps the link alive.
+- Build: build.bat now /std:c++latest (Protocol.h needs C++23), compiles
+  vendor common/Net.cpp into the DLL, links build/enet-1.3.18.lib +
+  ws2_32 + winmm (run build-rig.bat once for the enet lib). Fixed en
+  route: Removed is a struct with RemovedReason reason field.
+- fo4-test ini switched to net=f4mp, server=127.0.0.1:7779, name=Host.
+- SOLO TEST LADDER (owner, no second machine):
+  1) build\F4MPServer.exe --loopback-only (console: listening 7779)
+  2) game via f4se_loader, load save; log expect: "f4mp client
+     connecting", "connected, sending hello", "welcomed as player 1
+     in session ...", then 10 Hz states (quiet; not logged)
+  3) build\F4MPBot.exe --server 127.0.0.1:7779 --name Bot
+     --x <playerX> --y <playerY> --z <playerZ> (from the last "pos"
+     line... note: v15 no longer logs own pos; use any spot within
+     5000 units of the player, e.g. Sanctuary coords -80352 89600 7790)
+  4) expect: "player 2 joined: Bot" in the log, puppet spawns near the
+     bot's circle and follows it (the same dragging behavior as v14,
+     but through the full F4MP server path).
+  Server console also shows joins/leaves. If the bot's circle is far
+  from the player, the distance guard blocks moves silently at first -
+  pick coordinates near the player.
