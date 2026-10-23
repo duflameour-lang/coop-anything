@@ -440,3 +440,32 @@
   overhauls, MO2 profile) for the LATER compatibility phase; F4MP 0.9.0
   session-numbered forms are the base feature for that phase. Clean
   tests first (owner's order).
+## PRODUCT REQUIREMENTS (owner) - 2026-10-23 - feasibility checked
+Owner's must-have features (checked against F4MP protocol/design docs):
+1. SURVIVAL DIFFICULTY must work for both players. Feasible: survival
+   systems (hunger/thirst/fatigue/illness/adrenaline) run per-client on
+   their own actor; damage sync carries FRACTIONS of max health, and
+   survival multipliers are applied by each shooter's client before
+   reporting - both on survival = consistent. Caveat: full MP survival
+   test pass needed (edge cases).
+2. DIRECT HEALING of the other player, NOT a Skyrim-Together-style
+   mandatory downed/bleedout mechanic. Feasible: F4MP's downed/revive
+   system is a config block (DownRules, bRevive; --no-revive disables
+   downed entirely) - set revive=false. New feature: hotkey/activation
+   targeting the ally stand-in -> "heal ally" message -> target client
+   applies the heal locally. New message type needed (protocol extension
+   in our fork).
+3. BOTH players dead -> load last save. Feasible: deaths are server-
+   known (kReportDeath / health status); rule: one death puts the player
+   in a waiting state (no local reload); if the partner also dies ->
+   server commands both clients to load their last save. Pairing rule:
+   living player can actively heal-resurrect the waiting one (per req 2);
+   both dead = wipe. DESIGN: with survival, saves happen on sleep ->
+   co-op sleep (req 4) creates the shared checkpoint.
+4. SLEEP REQUIRES BOTH PLAYERS (co-op sleeping). Feasible: time sync
+   exists (kReportTime 17 / kWorldTime 119); gate: bed activation sends
+   a "sleep request"; sleep starts only when all players' requests are
+   present; both enter the sleep menu, save together (survival: the
+   save path). New messages + bed hook needed - small feature.
+All four live in P3 (gameplay rules) after P2 (core port); revive-off
+is a config flip that already exists upstream.
