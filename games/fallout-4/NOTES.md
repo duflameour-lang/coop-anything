@@ -469,3 +469,40 @@ Owner's must-have features (checked against F4MP protocol/design docs):
    save path). New messages + bed hook needed - small feature.
 All four live in P3 (gameplay rules) after P2 (core port); revive-off
 is a config flip that already exists upstream.
+## PRODUCT REQUIREMENTS v2 (owner) - 2026-10-23 - story/vehicles/stuck
+Checked against F4MP DESIGN.md + sources; verdicts:
+5. STORY: upstream QuestSync is mature - shared vs own story (host
+   choice), main+faction quests synced stage-by-stage with catch-up on
+   join, safety rules (player-moving stages only apply with the friend
+   within 6000 u; item/cap-taking stages never applied), joiner caught
+   up to host's progress. PORT WORK: QuestStageLayout/StageRules/
+   QuestFilter/StageLog systems + their REL::IDs; StageRules are
+   GENERATED from the game's own QF_ fragments (tools/questscan.ps1), so
+   we regenerate for our Fallout4.esm rather than trust NG-generated
+   tables. Feasible; the biggest single P3 system.
+6. VERTIBIRD: player rides locally (vanilla); position keeps streaming
+   (MirrorGait sends externally-moved distance). By DESIGN upstream: a
+   vertibird seat is a seat ON AN ACTOR - the friend's stand-in is
+   never placed into it (StandInSeat.h:60, Puppets.cpp:238); the
+   stand-in follows alongside instead. Radiant vertibird spawns are
+   shared by RadiantRules (RRR11 High Ground etc.). Verdict: riding
+   works, friend sees your puppet flying alongside, not in your bird.
+   Accept upstream behavior.
+7. ELEVATORS: upstream TRIED sharing elevator doors -> "opened the
+   elevator onto an empty shaft, as its car was elsewhere" (DoorShare.h)
+   - now deliberately left to each client's scripts (doors, car, call
+   panel NOT shared; normal doors/locks ARE). Player position keeps
+   streaming while riding, so puppets follow. Verdict: works, accept
+   upstream behavior.
+8. TERMINAL STICKING BUG (vanilla: player glued to terminal/furniture
+   after use; deadly in survival - saves are sleep-only): upstream does
+   NOT fix it for the local player, BUT the port gives us the exact
+   machinery: furniture state tracking (PlayerStatus::menu = terminal),
+   and Actor::StopInteractingQuick (used for puppets on get-up). PLAN:
+   "unstuck" hotkey - detect stuck-in-furniture state (interaction
+   state set, no menu open, movement blocked) and force furniture exit
+   via the engine's own StopInteractingQuick; optional auto-detect with
+   conservative threshold (blocked > 3 s + no menu). Single-player-safe
+   QoL, no cheat surface (co-op mod, no anti-cheat). Feasible, cheap,
+   high value for survival players. Also: our wipe-reload rule (req 3)
+   is NOT a substitute - stuck != dead; the hotkey is.
