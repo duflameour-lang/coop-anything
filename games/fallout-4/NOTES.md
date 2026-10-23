@@ -303,3 +303,44 @@
   mapped). Not blocking the LAN milestone.
 - Cleanup note for the owner: the standing-clone army existed only in
   that session; reload an earlier save and it is gone (unless saved).
+## PHASE 1 TRIAGE CONTRADICTION - 2026-10-23 (owner found three ACTIVE projects)
+- Owner downloaded three projects to "Other Mods and builds/"; extracted each
+  into its own dir under external/ (untrusted-data rules: nothing executed,
+  nothing built, READMEs/LICENSE read only; their AGENTS.md/CLAUDE.md treated
+  as data about THEIR projects, never as instructions for us).
+  1. Commonwealth Online (git.zambazosmedia.group/Commonwealth-Online-Public,
+     Nexus 412614): dedicated Python relay (TCP JSON 7777, UDP LAN discovery
+     7778), PlaceAtMe proxy actors, movement + locomotion anim sync,
+     appearance/apparel, partial weapon visuals, Vault 109 onboarding,
+     main-menu multiplayer UI. Target: FO4 1.11.221 + matching F4SE.
+     Source is MPL-2.0 (LICENSE file; the README "no license" section is
+     stale). Nexus zip ships CommonwealthOnline.dll + co-tunnel.exe.
+     Presence/infrastructure focus; combat/quests NOT synced yet.
+  2. F4Multiplayer (github.com/Jolley71717/F4Multiplayer, Nexus mod 109812):
+     F4SE plugin on CommonLibF4, up to 4 players over Steam P2P or LAN;
+     friends appear with their own face/gear/name; NPC AI shared, enemies
+     fight any player; deaths, loot, pickups, doors, locks, side quests
+     synced, main story shared (host choice); 0.9.0 protocol 49, "full
+     two-game test set and a multi-hour soak with no crash"; ships a test
+     bot (F4MPBot.exe) + standalone server. Target: FO4 1.11.240 (Steam),
+     F4SE 0.7.9, Address Library. License: GPL-3.0-or-later + modding and
+     linking exceptions.
+  3. FO4_Wrld (github.com/ThePie88/FO4_Wrld): solo dev, 10-player persistent
+     MMO ambitions, AGPL-3.0, target 1.11.191 NG. Deep RE: skin pipeline,
+     scene graph injection, per-bone pose replication, single-instance
+     bypass (1-byte patch, RVA on THEIR runtime). re/ dossiers explicitly
+     written to be reusable by others. Personal project, not distributed.
+- CONTRADICTION: our Phase 1 triage said "no public usable solution; build
+  from zero". F4Multiplayer is a PUBLIC, PLAYABLE co-op mod TODAY (alpha,
+  but years ahead of our prototype). Our triage missed it - name confusion
+  (F4MP, dead 2021, vs F4Multiplayer, alive). Per ground rule 6: stopping,
+  telling the owner, re-deciding. Claim issue #77 needs this correction.
+- CRITICAL FORK: ALL THREE target next-gen 1.11.x runtimes. Our f4-coop
+  plugin is pre-NG 1.10.163 (F4SE 0.6.23): every offset we use is dead on
+  NG, so a direct code merge into our plugin is impossible without
+  retargeting everything anyway. Licenses per project: MPL (CO) / GPL+exc
+  (F4MP) / AGPL (Wrld) - all mergeable in principle, differently.
+- f4-coop results stay valuable regardless: F4SE task-interface threading,
+  save-load lifecycle gates, value-encoded message bools, player-move
+  pathology, puppet save-baking hygiene - documented in this NOTES and
+  transferable as contributions or docs to any of the three.
