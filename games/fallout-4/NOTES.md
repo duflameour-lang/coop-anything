@@ -344,3 +344,43 @@
   save-load lifecycle gates, value-encoded message bools, player-move
   pathology, puppet save-baking hygiene - documented in this NOTES and
   transferable as contributions or docs to any of the three.
+## DECISION (owner) - 2026-10-23: PORT F4Multiplayer TO 1.10.163
+- Owner chose the stubborn path explicitly: game stays pre-NG 1.10.163
+  (F4SE 0.6.23); we BUILD ON F4Multiplayer's code - port it to our runtime,
+  merging with our proven f4-coop skeleton. "мы обязаны это сделать".
+- Scoping done from the downloaded tree:
+  - Version-coupled surface is bounded: ~70 REL::ID (Address Library)
+    usages across src/ (Puppets 6, Equipment 20, TextureWait 15, Workshop 8,
+    Face 8, SaveGuard 4, main 3, ExitMusic 3, DevCommands 3, Dialogue 2...).
+    Address Library (meh321, Nexus mod 47327) was born on 1.10.163 and its
+    IDs are stable across runtimes - we need version-1-10-163-0.bin.
+  - common/ (9.6k lines: Protocol.h, EnetTransport, Server, Net,
+    FormTranslate, BanList, DropStore, TokenBucket, IniFile, Name, Redact)
+    is game-free -> portable nearly as-is. server/main.cpp (159) and
+    bot/main.cpp (730) build WITHOUT the game -> immediate test rig.
+  - src/ ~60k lines total. Game-coupled parts: vtable slots (e.g. Puppets
+    uses Actor::Update slot 0xCF per NG CommonLibF4 - re-identify on
+    1.10.163), struct layouts (CommonLibF4 encodes NG layouts; we
+    substitute f4se-0.6.23-header layouts, our verified ones), and the IDs.
+  - lib/commonlibf4 is an EMPTY submodule dir in the GitHub zip; reference
+    must be fetched (github.com/libxse/commonlibf4) OR we go shim-first:
+    f4se-0.6.23 headers + a small REL::ID shim loading the 1.10.163
+    address file. CommonLibF4 itself is NOT strictly required for the port.
+  - Stack: C++23, MSVC, ENet 1.3.18 (pinned by their xmake), Steam P2P via
+    the game's own steam_api64.dll (works on 1.10.163 too).
+- License consequence: porting GPL-3 code makes our f4-coop distribution
+  GPL-3 (their modding/linking exception covers proprietary game linking).
+  Keep F4MP copyright headers, add LICENSE + THIRD_PARTY notices when
+  vendoring common/. Owner implicitly accepted by choosing this path;
+  LICENSE swap in the repo is a flagged paperwork step.
+- Phase plan:
+  P1 test rig (no game needed): vendor common/ + server + bot into f4-coop,
+  fetch ENet 1.3.18, build with our MSVC toolchain, run server + bot.
+  P2 plugin core: F4MP net/session layer onto our proven 0.6.23 skeleton
+  (task interface, lifecycle gates); Puppets.cpp port vs the ID dossier.
+  P3 systems one-by-one: movement smoothing/gait, appearance (Face),
+  equipment, combat, loot - milestone-tested with the bot per playbook.
+- Pending owner actions/downloads (rule: official sources, pinned, owner
+  downloads): ENet 1.3.18 (github.com/lsalzman/enet), Address Library
+  1.10.163 file (Nexus mod 47327, owner's account), optionally the
+  commonlibf4 clone for reference.
