@@ -384,3 +384,27 @@
   downloads): ENet 1.3.18 (github.com/lsalzman/enet), Address Library
   1.10.163 file (Nexus mod 47327, owner's account), optionally the
   commonlibf4 clone for reference.
+## P1 COMPLETE - test rig runs - 2026-10-23
+- Permissions given by owner; done: ENet 1.3.18 downloaded from the
+  official repo (SHA-256 28603c895f9ed24a846478180ee72c7376b39b4bb1287b73
+  877e5eae7d96b0dd), commonlibf4 cloned as reference (external/,
+  read-only), Address Library 1.10.163 zip pending from owner (needed
+  in P2, not P1).
+- Vendored into f4-coop (now GPL-3 + upstream Modding and Linking
+  exceptions; LICENSE/EXCEPTIONS/README with provenance): F4MP common/
+  (protocol, ENet transport, server, sessions - game-free), server/main,
+  bot/main; ENet 1.3.18 source. Plugin code untouched, still 0.6.23.
+- build-rig.bat builds all three with plain MSVC (no xmake): ENet static
+  lib + F4MPServer.exe + F4MPBot.exe. Build lessons: ENet needs
+  winmm.lib + ws2_32; F4MP common needs /std:c++latest (c++23); bot also
+  needs Redact.cpp. 
+- SMOKE TEST PASDED: F4MPServer --loopback-only, F4MPBot --server
+  127.0.0.1:7779 -> "connected, sending hello", "welcomed as player 1 in
+  session e2d8cb5735d63a34 (shared story)", world-state snapshot received,
+  clean leave. The full F4MP protocol/session layer now runs on our
+  machine, game-free.
+- Next (P2): read Protocol.h/Server.h end-to-end, extract the complete
+  REL::ID dossier from src/, wait for the Address Library 1.10.163 bin
+  from the owner, then port the plugin net layer onto our proven
+  f4se-0.6.23 skeleton (task interface, lifecycle gates, value-encoded
+  message bools) with Puppets.cpp as the first game-coupled target.
