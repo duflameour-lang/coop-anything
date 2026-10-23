@@ -544,3 +544,32 @@ Checked against F4MP DESIGN.md + sources; verdicts:
   Server console also shows joins/leaves. If the bot's circle is far
   from the player, the distance guard blocks moves silently at first -
   pick coordinates near the player.
+## v15 test analysis + v16 - 2026-10-23
+- v15 first owner test: ini parser had an inverted check (net=f4mp
+  selected legacy) - fixed same day; second test: protocol fully
+  working (welcome, bot joins, reconnect after server restart).
+  Still no puppet.
+- RIG PROVEN HEALTHY with an instrumented server (then reverted):
+  two bots hear each other at 24-28 states/s, relay batches every ~2
+  server ticks. The earlier "zero states" repros were MY test-script
+  bugs: bash precedence made the two bots run sequentially (no
+  overlap), and I grepped "recv" which the bot never prints (states
+  are counted silently into an exit summary). Lesson: verify test
+  harness behavior before blaming the system under test.
+- Game-session forensics: exactly ONE apply task ran (it reached the
+  menu/pause gate, which requires non-empty ghosts - so at least one
+  relay batch arrived), then silence. Most consistent story: the game
+  sat paused (alt-tab to check the bot consoles / a menu) while the
+  bots ran; v15's pause gate BLOCKED puppet spawn+move during it and
+  logged the block only once. The pause gate was cargo cult: it was
+  added for loading screens in v7, but v8 PROVED numPauseGame never
+  sees loading screens (loads are guarded by armed+grace since v9).
+- v16: pause gate demoted to passive logging; puppet spawn/move no
+  longer blocked by menus. 5-second heartbeat added to the log:
+  "beat: welcomed=1 myId=1 states=N ghosts=N tasks=N joined=N" -
+  if the heartbeat stops, the net thread died; states=0 means relays
+  are not reaching us; ghosts=0 means the self-filter is eating them;
+  tasks=0 means the posting gate is stuck. No more silent nothing.
+- Retest expectation: STAY IN GAME (unpaused) ~30 s after starting
+  the bot; watch the beat lines. Puppet should appear within a second
+  of the bot's first states.
