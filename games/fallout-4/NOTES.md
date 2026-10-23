@@ -408,3 +408,35 @@
   from the owner, then port the plugin net layer onto our proven
   f4se-0.6.23 skeleton (task interface, lifecycle gates, value-encoded
   message bools) with Puppets.cpp as the first game-coupled target.
+## P2 OPENING - ID SPACE VERDICT - 2026-10-23
+- Address Library 1.10.163 arrived from the owner (zip SHA-256
+  2b1ca019d032c197957721af3430377c7545023741539827d6721c50a500e0fd):
+  F4SE/Plugins/version-1-10-163-0.bin. Format V0 per commonlib-shared
+  src/REL/IDDB.cpp: uint64 count then {id,offset} pairs, sorted by id.
+  1,582,975 entries, IDs 0..1,583,368.
+- tools/aldump.c added to f4-coop (build-rig.bat builds it; Python does
+  not exist on the owner machine - write tools in C).
+- VERDICT: ALL 23 F4MP REL::IDs (range 2.19M-4.48M) are MISSING from
+  the 1.10.163 bin. The NG address library was rebuilt with a new,
+  larger ID space; there is no automatic pre-NG<->NG mapping. Every ID
+  must be translated semantically.
+- GOOD NEWS: F4MP call sites self-document semantics in comments
+  (e.g. 2192002 = "head task's processing, QueuedHead +2CC280";
+  2228998 = the main pump / Main::Run; TextureWait.cpp sites = engine
+  NiTexture list, renderer lock owner/count; NG RVAs in comments serve
+  as cross-checks). Translation route per site: semantic name -> find
+  the 1.10.163 counterpart (f4se-0.6.23 RelocAddr headers first,
+  disassembly where absent).
+- CommonLibF4 reference fully fetched (commonlib-shared submodule in).
+  It targets NG: RUNTIME_LATEST 1.11.240, IDs.h holds NG-space IDs,
+  despite Version.h also listing old runtimes. A wholesale "build F4MP
+  for 1.10.163" would first require porting CommonLibF4 itself to
+  F4SE 0.6.23 + pre-NG layouts - upstream-scale work. CONFIRMED
+  STRATEGY: incremental port - our proven 0.6.23 skeleton + their
+  common/ (already running in the rig) + game systems ported one by
+  one with per-site ID translation.
+- Owner modpack recorded (Mods in the PALENO: 47 mods incl. Buffout 4,
+  CBBE, ELFX, PRP, HUDFramework, UF4P, ENB parallax, animation and NPC
+  overhauls, MO2 profile) for the LATER compatibility phase; F4MP 0.9.0
+  session-numbered forms are the base feature for that phase. Clean
+  tests first (owner's order).
