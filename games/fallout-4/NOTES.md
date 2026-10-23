@@ -572,4 +572,22 @@ Checked against F4MP DESIGN.md + sources; verdicts:
   tasks=0 means the posting gate is stuck. No more silent nothing.
 - Retest expectation: STAY IN GAME (unpaused) ~30 s after starting
   the bot; watch the beat lines. Puppet should appear within a second
-  of the bot's first states.
+  of the bot's first states.## v16 test + v17 starvation fix - 2026-10-23
+- v16 test: PROTOCOL PATH FULLY WORKS on 1.10.163 - welcomed, bot relays
+  at ~30/s, puppets DID spawn (two: one per bot instance the owner ran;
+  one far bot stood still behind the 5000u distance guard with its own
+  puppet spawned at the player). Owner killed one puppet (corpse-follow
+  is the known unfixable-until-RE behavior).
+- The heartbeat earned its keep immediately: it exposed that beats
+  STOPPED for exactly the 6-minute window where states kept counting
+  (10078 in 360 s = 28/s). Root cause: the inner receive loop used a
+  100 ms enet_host_service timeout; with a packet every ~35 ms it never
+  went idle, so our own 10 Hz sends, task posting AND the beat starved.
+  The gap ended when the owner restarted a bot (stream pause) - which
+  is why both puppets appeared at once "near the end".
+- v17: first event call waits 5 ms (upstream bot's pattern), further
+  calls drain with a 0 timeout, bounded to 64 events per pass. The
+  outer loop now always runs; sends, posts and beats are continuous.
+- Retest note: give the bot coordinates NEAR the character (the far
+  bot's puppet just stands where it spawned, moves blocked by the
+  distance guard - expected, logged once as "ghost too far").
